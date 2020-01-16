@@ -376,7 +376,7 @@ router.post('/api/init_hfc_client', function(req, res) {
 
 router.get('/api/client', function(req, res) {
   console.log(client)
-  // if client established
+  // if client established, send status/name?
   res.send(200)
   // res.json(client)
 });

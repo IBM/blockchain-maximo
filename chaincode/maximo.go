@@ -70,13 +70,14 @@ type WorkOrder struct {
 	Asset			string 			`json:"asset"`
 	LastModifiedBy  string			`json:"lastmodifiedby"`
 	Vendor  	string			`json:"vendor"`
+	Priority		string			`json:"priority"`
 	Status		string			`json:"status"` // trigger api call to maximo when status is complete
 	Description string		`json:"description"`
 	DateUpdated string		`json:"dateupdated"`
 	// RiskAssessment string	`json:"riskassessment"`
 }
 
-type Worker struct {
+type User struct {
 	Id				string			`json:"id"`
 	Company		string			`json:"company"` // city, private_hazmat_co
 	Type			string 			`json:"type"` // vendor, inspector
@@ -201,6 +202,8 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		return write(stub, args)
 	} else if function == "init_work_order" {      //create a new marble
 		return init_work_order(stub, args)
+	} else if function == "init_user" {      //create a new marble
+		return init_user(stub, args)
 	} else if function == "update_work_order" {      //create a new marble
 		return update_work_order(stub, args)
 	} else if function == "init_asset" {      //create a new marble

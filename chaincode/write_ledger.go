@@ -27,7 +27,9 @@ import (
 	// "strings"
 	// "reflect"
 	// "math"
+	"math/rand"
 	"time"
+	"strconv"
 	// "encoding/gob"
 	// "bytes"
 	"github.com/hyperledger/fabric-chaincode-go/shim"
@@ -144,8 +146,7 @@ func init_asset(stub shim.ChaincodeStubInterface, args []string) (pb.Response) {
 // args.add("asset1")
 
 
-// if work order already exists, get state from ledger and update
-// called initially by automation scripts
+// this should be called by automation scripts from maximo
 func init_work_order(stub shim.ChaincodeStubInterface, args []string) (pb.Response) {
 	var err error
 	fmt.Println("starting init_work_order")
@@ -153,8 +154,13 @@ func init_work_order(stub shim.ChaincodeStubInterface, args []string) (pb.Respon
 	// json.Marshal(args)
 	workorder.Id = args[0]
 	workorder.Status = args[1]
-	workorder.Vendor = args[2]
-	workorder.Asset = args[3]
+	workorder.LastModifiedBy = "Maximo" // TODO, perhaps add actual name/maximo_user?
+	workorder.Vendor = args[2] // TODO, lookup a way to prevent duplicate vendors
+	if (len(args) > 3) {
+		workorder.Asset = args[3]
+	} else {
+		workorder.Asset = ""
+	}
 	workOrderAsBytes, _ := json.Marshal(workorder)                         //convert to array of bytes
 	fmt.Println("writing workorder to ledger state")
 	fmt.Println(string(workOrderAsBytes))
@@ -163,23 +169,56 @@ func init_work_order(stub shim.ChaincodeStubInterface, args []string) (pb.Respon
 		fmt.Println("Could not store workorder")
 		return shim.Error(err.Error())
 	}
+
+	// register vendor
+	fmt.Println("registering wo vendor")
+
+	var user User
+	rand.Seed(time.Now().UnixNano())
+	id_num := strconv.Itoa(rand.Intn(10000))
+	user.Id = "user" + id_num
+	user.Company = workorder.Vendor
+	user.Type = "HAZMAT_VENDOR"
+	fmt.Println("user info")
+	fmt.Println(user.Id)
+	fmt.Println(user.Company)
+	fmt.Println(user.Type)
+	userAsBytes, _ := json.Marshal(user)                         //convert to array of bytes
+  err = stub.PutState(user.Id, userAsBytes)                    //store owner by its Id
+	if err != nil {
+		fmt.Println("Could not store user")
+		return shim.Error(err.Error())
+	}
+
 	fmt.Println("- end init_work_order")
 	return shim.Success(nil)
 }
 
-// called by UI
+// called by third-party UI
 func update_work_order(stub shim.ChaincodeStubInterface, args []string) (pb.Response) {
 	var err error
 	fmt.Println("starting update_work_order")
-	workorder_id = args[0]
+	workorder_id := args[0]
 	workorderAsBytes, err := stub.GetState(workorder_id)
+	fmt.Println("work_order loaded")
 	workorder := WorkOrder{}
 	err = json.Unmarshal(workorderAsBytes, &workorder)           //un stringify it aka JSON.parse()
 	if err != nil {
 		return shim.Error("Error loading workorder")
 	}
 	workorder.Status = args[1] // INPRG, APPR, COMPLETED, WAPPR (should be called after)
-	workorder.LastModifiedBy = args[2] // HAZMAT_INSPECTOR, HAZMAT_VENDOR, BUILDING_INSPECTOR
+	workorder.LastModifiedBy = args[2] // user_id --- HAZMAT_INSPECTOR, HAZMAT_VENDOR, BUILDING_INSPECTOR
+
+	if (len(args) > 3 ) {
+		workorder.Priority = args[3]
+	}
+	if (workorder.Status == "WAPPR" ) {
+		workorder.Status = "APPR"
+	} else if (workorder.Status == "APPR" ) {
+		workorder.Status = "INPRG"
+	} else if (workorder.Status == "INPRG" ) {
+		workorder.Status = "COMP"
+	}
 	workorder.DateUpdated = time.Now().Format("2006-01-02 15:04:05")
 	workOrderAsBytes, _ := json.Marshal(workorder)                         //convert to array of bytes
 	err = stub.PutState(workorder.Id, workOrderAsBytes)                    //store owner by its Id
@@ -266,6 +305,30 @@ func add_meter_reading(stub shim.ChaincodeStubInterface, args []string) pb.Respo
 	return shim.Success(nil)
 }
 
+
+func init_user(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	var err error
+	fmt.Println("starting init_user")
+
+	//input sanitation
+	err = sanitize_arguments(args)
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+  // regulator_id := args[0]
+  user := User{}
+  user.Id = args[0]
+  user.Company = args[1]
+	user.Type = args[2]
+  userAsBytes, _ := json.Marshal(user)                         //convert to array of bytes
+  err = stub.PutState(user.Id, userAsBytes)                    //store owner by its Id
+	if err != nil {
+		fmt.Println("Could not store user")
+		return shim.Error(err.Error())
+	}
+	fmt.Println("- end init_user")
+	return shim.Success(nil)
+}
 
 /*
 func init_asset_listing(stub shim.ChaincodeStubInterface, args []string) pb.Response {
