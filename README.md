@@ -1,4 +1,4 @@
-# Generate and visualize video analytics using PowerAI Vision
+# Track Maximo Assets / Work Orders on a Blockchain Ledger
 
 In this Code Pattern, we will demonstrate how to leverage "Automation Scripts" to track Maximo Assets within a Blockchain ledger.
 
@@ -30,19 +30,59 @@ Sign up for a trial account of Maximo [here](https://www.ibm.com/account/reg/us-
 
 * [Docker Engine](https://docs.docker.com/install/). This is a tool that allows for complex applications to packaged as containers. We'll use docker here to deploy a containerized Hyperledger Fabric blockchain network
 
+* [Ngrok](https://ngrok.com/). This is a service that enables a server to be exposed via a public url. This is necessary in this example because we are running our server and blockchain ledger on a local machine.
+
 # Steps
 
 Follow these steps to setup and run this Code Pattern.
 
-1. [Create Automation Script in Maximo](#1-create-automation-script-in-maximo)
-2. [Create Work Order in Maximo](#2-create-work-order-in-maximo)
-3. [Deploy Blockchain Ledger](#3-deploy-blockchain-ledger)
-4. [Deploy Web Application](#4-deploy-backend)
-5. [Simulate Work Order Update](#5-simulate-work-order-update)
+1. [Start Ngrok](#1-install-and-start-ngrok)
+2. [Create Automation Script in Maximo](#2-create-automation-script-in-maximo)
+3. [Create Work Order in Maximo](#3-create-work-order-in-maximo)
+4. [Deploy Blockchain Ledger](#4-deploy-blockchain-ledger)
+5. [Deploy Web Application](#5-deploy-backend)
+6. [Simulate Work Order Update](#6-simulate-work-order-update)
 
 <!-- 5. [Create a Dashboard](#4-create-dashboard) -->
 
-## 1. Create Automation Script in Maximo
+## 1. Install and start Ngrok
+
+Here we will start ngrok to expose our blockchain server on a public address. This is necessary for the hosted Maximo service to send requests to our local machine.
+
+```
+#Linux
+wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip
+
+#Mac OS X
+wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-darwin-386.zip
+
+# Extract ngrok to path
+unzip -d /usr/local/bin/ ngrok-stable*zip
+
+# Start ngrok server to forward traffic to port 8000
+ngrok http 8000
+```
+
+You should see some output like so. Take note of the public URL (http://a6fe75e8.ngrok.io in this example).
+
+```
+ngrok by @inconshreveable                                       (Ctrl+C to quit)
+
+Session Status                online
+Session Expires               7 hours, 59 minutes
+Version                       2.3.35
+Region                        United States (us)
+Web Interface                 http://127.0.0.1:4040
+Forwarding                    http://a6fe75e8.ngrok.io -> http://localhost:8000
+Forwarding                    https://a6fe75e8.ngrok.io -> http://localhost:8000
+
+Connections                   ttl     opn     rt1     rt5     p50     p90
+                              0       0       0.00    0.00    0.00    0.00
+```
+
+Replace the `url` variable with your ngrok URL (here)[https://github.com/IBM/blockchain-maximo/blob/master/maximo_automation_scripts/work_order_script.py#L57]
+
+## 2. Create Automation Script in Maximo
 
 Login to Maximo Dashboard
 
@@ -75,13 +115,13 @@ Click the "next" button. Now, enter a name and language for the script. We'll us
 <img src="https://i.imgur.com/5AhvIEG.png">
 
 
-Click "Next" a final time, and then copy and paste the code from our included script at [maximo_automation_scripts/work_order_script.py](maximo_automation_scripts/work_order_script.py).
+Click "Next" a final time, and then copy and paste the code from our included script at [maximo_automation_scripts/work_order_script.py](maximo_automation_scripts/work_order_script.py). *Confirm that the `url` variable matches your ngrok address from Step 1.*
 
 Click the "Create" to finalize the script.
 
 To see more on launch points, please visit the following [page](https://www.ibm.com/support/knowledgecenter/SSANHD_7.5.3/com.ibm.mbs.doc/autoscript/c_ctr_launch_points.html)
 
-## 2. Create Work Order in Maximo
+## 3. Create Work Order in Maximo
 
 Next, we'll create a Work Order. In the "Find Navigation Item" section, search for "Work Order Tracking"
 
@@ -89,7 +129,7 @@ Click "New Work Order".
 
 Click "Save Work Order". We will return to this section once the blockchain ledger and Web Application are up and running
 
-## 3. Deploy Blockchain Ledger
+## 4. Deploy Blockchain Ledger
 
 Add the following entries to your `/etc/hosts` file.
 
@@ -120,7 +160,7 @@ b85f8b60ea6a        hyperledger/fabric-ca                                       
 ```
 
 
-## 4. Deploy Web Application
+## 5. Deploy Web Application
 
 Clone repository using the git cli
 
@@ -180,7 +220,7 @@ Confirm you can access the Dashboard UI at [http://localhost:8080](http://localh
 <img src="https://i.imgur.com/I216GCw.png">
 
 
-## 5. Simulate Work Order Update
+## 6. Simulate Work Order Update
 
 Now that our system is up and running, we can simulate a typical workflow.
 
