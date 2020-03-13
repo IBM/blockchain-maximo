@@ -54,7 +54,6 @@ FixedLoggers.MAXIMOLOGGER.info(obj)
 # post json to chaincode
 handler = HTTPHandler()
 map = HashMap()
-url = "http://c1dfe6f7.ngrok.io"
 map.put("URL", url + "/api/chaincode")
 map.put("HTTPMETHOD", "POST")
 map.put("body", jsonStr)

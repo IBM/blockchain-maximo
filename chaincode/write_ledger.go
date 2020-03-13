@@ -38,13 +38,6 @@ import (
 
 // ============================================================================================================================
 // write() - genric write variable into ledger
-//
-// Shows Off PutState() - writting a key/value into the ledger
-//
-// Inputs - Array of strings
-//    0   ,    1
-//   key  ,  value
-//  "abc" , "test"
 // ============================================================================================================================
 func write(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	var key, value string
@@ -74,13 +67,6 @@ func write(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 
 // ============================================================================================================================
 // delete_marble() - remove a marble from state and from marble index
-//
-// Shows Off DelState() - "removing"" a key/value from the ledger
-//
-// Inputs - Array of strings
-//      0      ,         1
-//     id      ,  authed_by_company
-// "m999999999", "united marbles"
 // ============================================================================================================================
 func delete(stub shim.ChaincodeStubInterface, args []string) (pb.Response) {
 	fmt.Println("starting delete")
@@ -98,16 +84,6 @@ func delete(stub shim.ChaincodeStubInterface, args []string) (pb.Response) {
 
 // ============================================================================================================================
 // Init Product - create a new asset, store into chaincode state
-//
-// Shows off building a key's JSON value manually
-//
-// Inputs - Array of strings
-
-//      0      ,    1  ,     				2  ,      																			3          			 ,    4     ,     5					, 	6
-//     id      ,  loan amount ,  borrower_info , 															, state								 , interest ,  balance due	, grade
-// "m999999999", "545,000"    ,   object																				deliquent/in payment , 	3.0    , 		520,000			,  BBB
-															// credit/income verification/debt to income,
-
 // ============================================================================================================================
 func init_asset(stub shim.ChaincodeStubInterface, args []string) (pb.Response) {
 	var err error
@@ -137,15 +113,6 @@ func init_asset(stub shim.ChaincodeStubInterface, args []string) (pb.Response) {
 	return shim.Success(nil)
 }
 
-
-// update_asset
-
-// args.add("workorder1")
-// args.add("failing")
-// args.add("vendor1")
-// args.add("asset1")
-
-
 // this should be called by automation scripts from maximo
 func init_work_order(stub shim.ChaincodeStubInterface, args []string) (pb.Response) {
 	var err error
@@ -174,6 +141,7 @@ func init_work_order(stub shim.ChaincodeStubInterface, args []string) (pb.Respon
 	fmt.Println("registering wo vendor")
 
 	var user User
+  // allow user to provide id from UI instead of randomly generating one TODO
 	rand.Seed(time.Now().UnixNano())
 	id_num := strconv.Itoa(rand.Intn(10000))
 	user.Id = "user" + id_num
@@ -230,14 +198,7 @@ func update_work_order(stub shim.ChaincodeStubInterface, args []string) (pb.Resp
 	return shim.Success(nil)
 }
 // ============================================================================================================================
-// Init Owner - create a new owner aka end user, store into chaincode state
-//
-// Shows off building key's value from GoLang Structure
-//
-// Inputs - Array of Strings
-//           0     ,     1   ,   2
-//      owner id   , username, company
-// "o9999999999999",     bob", "united marbles"
+// Init Meter - register a new meter, store into chaincode state
 // ============================================================================================================================
 
 func init_meter(stub shim.ChaincodeStubInterface, args []string) pb.Response {
@@ -329,233 +290,3 @@ func init_user(stub shim.ChaincodeStubInterface, args []string) pb.Response {
 	fmt.Println("- end init_user")
 	return shim.Success(nil)
 }
-
-/*
-func init_asset_listing(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-	var err error
-	fmt.Println("starting init_asset_listing")
-
-	//input sanitation
-	err = sanitize_arguments(args)
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-	// user.ObjectType = "asset_user"
-  asset_listing_id := args[0]
-  supplier_id := args[1]
-  // asset_ids := args[2] // Expecting JSON array of asset ids. TODO, csv would probably be easier?
-
-  assetListing := ProductListingContract{}
-  assetListing.Id = asset_listing_id
-  assetListing.Status = "INITIALREQUEST"
-  assetListing.Owner = supplier_id
-  assetListing.Supplier = supplier_id
-  assetListing.OwnerType = "Supplier"
-
-  numProducts := len(args) - 2
-  var assets = make([]string, numProducts)
-  // all array elements after first 2 are parsed as asset ids
-  for i := 2; i < len(args); i++ {
-    assets[i - 2] = args[i]
-  }
-  assetListing.Products = assets //csv.NewReader(asset_ids) //json.Unmarshal(asset_ids)
-
-  // TODO? update asset location to same as supplier
-  // supplierAsBytes, err := stub.GetState(supplier_id)
-  // supplier := Supplier{}
-	// err = json.Unmarshal(supplierAsBytes, &supplier)           //un stringify it aka JSON.parse()
-	// if err != nil {
-	// 	return shim.Error("Error loading supplier")
-	// }
-  assetListingAsBytes, _ := json.Marshal(assetListing)                         //convert to array of bytes
-  err = stub.PutState(asset_listing_id, assetListingAsBytes)                    //store owner by its Id
-	if err != nil {
-		fmt.Println("Could not store asset listing")
-		return shim.Error(err.Error())
-	}
-	fmt.Println("- end init_asset_listing")
-	return shim.Success(nil)
-}
-
-func init_regulator(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-	var err error
-	fmt.Println("starting init_regulator")
-
-	//input sanitation
-	err = sanitize_arguments(args)
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-  // regulator_id := args[0]
-  regulator := Regulator{}
-  regulator.Id = args[0]
-  regulator.countryId = args[1]
-  regulatorAsBytes, _ := json.Marshal(regulator)                         //convert to array of bytes
-  err = stub.PutState(regulator.Id, regulatorAsBytes)                    //store owner by its Id
-	if err != nil {
-		fmt.Println("Could not store regulator")
-		return shim.Error(err.Error())
-	}
-	fmt.Println("- end init_regulator")
-	return shim.Success(nil)
-}
-
-func transfer_asset_listing(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-  var err error
-	fmt.Println("-starting transfer_asset_listing")
-  //input sanitation
-	err = sanitize_arguments(args)
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-  asset_listing_id := args[0]
-  new_owner_id := args[1]
-  // user_type := args[1]
-  // user_id := args[1]
-  // retailer_id := args[2]
-
-  assetListingAsBytes, err := stub.GetState(asset_listing_id)
-  assetListing := ProductListingContract{}
-	err = json.Unmarshal(assetListingAsBytes, &assetListing)           //un stringify it aka JSON.parse()
-	if err != nil {
-		fmt.Println(string(assetListingAsBytes))
-		return shim.Error(err.Error())
-	}
-  assetListing.Owner = new_owner_id
-  if (strings.ToLower(assetListing.OwnerType) == "supplier") {
-    assetListing.OwnerType = "Importer"
-    assetListing.Status = "EXEMPTCHECKREQ"
-    assetListing.Owner = new_owner_id
-
-  } else if ( strings.ToLower(assetListing.OwnerType) == "importer" ) {
-    assetListing.OwnerType = "Retailer"
-    if ( assetListing.Status == "EXEMPTCHECKREQ" ){
-      return shim.Error("Products in listing need to be checked by regulator.")
-    } else if ( assetListing.Status == "HAZARDANALYSISCHECKREQ" ){
-      return shim.Error("Products cannot be transferred as they've been flagged by regulator.")
-    }
-    retailerAsBytes, err := stub.GetState(new_owner_id)
-    retailer := Retailer{}
-  	err = json.Unmarshal(retailerAsBytes, &retailer)           //un stringify it aka JSON.parse()
-  	if err != nil {
-  		fmt.Println(string(retailerAsBytes))
-  		return shim.Error(err.Error())
-  	}
-    // _, assets := json.Marshal(assetListing.Products)
-    for _, asset := range assetListing.Products {
-      retailer.Products = append(retailer.Products, asset)
-    }
-    retailerAsBytes, _ = json.Marshal(retailer)           //convert to array of bytes
-    err = stub.PutState(new_owner_id, retailerAsBytes)     //rewrite the marble with id as key
-    if err != nil {
-      return shim.Error(err.Error())
-    }
-  } else {
-      return shim.Error("Invalid user type provided.")
-  }
-  assetListingAsBytes, _ = json.Marshal(assetListing)                         //convert to array of bytes
-  err = stub.PutState(asset_listing_id, assetListingAsBytes)                    //store owner by its Id
-	if err != nil {
-		fmt.Println("Could not store asset listing")
-		return shim.Error(err.Error())
-	}
-  fmt.Println("- end transfer_asset_listing")
-	return shim.Success(nil)
-}
-
-func update_exempted_list(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-  fmt.Println("- start update_exempted_list")
-  // ["regulator1", "org", "org1", "org2"..]
-  // add list of exempted orgs or assets to regulator
-  regulator_id := args[0]
-  exempted_type := args[1]
-  // all remaining args are list of ids
-
-
-  regulatorAsBytes, err := stub.GetState(regulator_id)
-  regulator := Regulator{}
-	err = json.Unmarshal(regulatorAsBytes, &regulator)           //un stringify it aka JSON.parse()
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-
-  numIds := len(args) - 2
-  ids := make([]string, numIds)
-  // all array elements after first 2 are parsed as asset ids
-  for i := 2; i < len(args); i++ {
-    ids[i - 2] = args[i]
-  }
-
-  // TODO, should probably append list
-  if (exempted_type == "org") {
-    regulator.ExemptedOrgIds = ids
-  } else if (exempted_type == "asset") {
-    regulator.ExemptedProductIds = ids
-  }
-
-  regulatorAsBytes, _ = json.Marshal(regulator)                         //convert to array of bytes
-  err = stub.PutState(regulator_id, regulatorAsBytes)                    //store owner by its Id
-	if err != nil {
-		fmt.Println("Could not store regulator")
-		return shim.Error(err.Error())
-	}
-  fmt.Println("- end update_exempted_list")
-	return shim.Success(nil)
-
-}
-
-func check_assets(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-  asset_listing_id := args[0]
-  regulator_id := args[1]
-
-  assetListingAsBytes, err := stub.GetState(asset_listing_id)
-  assetListing := ProductListingContract{}
-	err = json.Unmarshal(assetListingAsBytes, &assetListing)           //un stringify it aka JSON.parse()
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-
-  supplierAsBytes, err := stub.GetState(assetListing.Supplier)
-  supplier := Supplier{}
-	err = json.Unmarshal(supplierAsBytes, &supplier)           //un stringify it aka JSON.parse()
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-
-  regulatorAsBytes, err := stub.GetState(regulator_id)
-  regulator := Regulator{}
-	err = json.Unmarshal(regulatorAsBytes, &regulator)           //un stringify it aka JSON.parse()
-	if err != nil {
-		return shim.Error(err.Error())
-	}
-
-  if (assetListing.Status != "EXEMPTCHECKREQ" && assetListing.Status != "HAZARDANALYSISCHECKREQ"){
-    return shim.Error("Invalid state, listing cannot be checked");
-  }
-
-  check := true
-  if (assetListing.Status=="EXEMPTCHECKREQ"){
-    // check if the supplier org is exempted by regulator
-
-    for _, orgId := range regulator.ExemptedOrgIds {
-      if ( supplier.orgId == orgId ) {
-        check = false
-      }
-    }
-  }
-
-  if (check) {
-    assetListing.Status="CHECKCOMPLETED"
-  } else {
-    assetListing.Status="HAZARDANALYSISCHECKREQ"
-  }
-
-  assetListingAsBytes, _ = json.Marshal(assetListing)           //convert to array of bytes
-  err = stub.PutState(asset_listing_id, assetListingAsBytes)     //rewrite the marble with id as key
-  if err != nil {
-    return shim.Error(err.Error())
-  }
-  fmt.Println("- end check_assets")
-	return shim.Success(nil)
-}
-*/

@@ -577,6 +577,23 @@
           "fields": config.fields
         });
       },
+      /* //TODO, propagate state changes back to Maximo
+      // add optional note/image
+      // propagateChangesMaximo() {
+      // add check confirming update is valid
+      // type can be asset,
+      fetch(`http://<maximo_ip>/oslc/<type>/status`, options).then((response) => {
+        console.log("ledger state retrieved")
+        response.json().then((json) => {
+          console.log(json)
+          var result = JSON.parse(json)
+
+          this.$data.ledgerState = result
+        })
+      }
+
+      }),*/
+
       hideModal(name) {
         this.$modal.hide(name);
         console.log("hiding modal")

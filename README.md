@@ -6,9 +6,7 @@ This is targeted towards Maximo users that have assets that may be managed by th
 
 When the reader has completed this Code Pattern, they will understand how to leverage Maximo Automation Scripts to propagate changes to a blockchain ledger.
 
-<img src="https://i.imgur.com/lKeuzAn.png">
-<!-- ![Architecture](https://i.imgur.com/lKeuzAn.png) -->
-
+<img src="https://developer.ibm.com/developer/patterns/tracking-maximo-managed-asset-transactions-across-a-business-network/images/architecture.png">
 
 #  Components
 
@@ -60,7 +58,7 @@ wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-darwin-386.zip
 unzip -d /usr/local/bin/ ngrok-stable*zip
 
 # Start ngrok server to forward traffic to port 8000
-ngrok http 8000
+ngrok http 3000
 ```
 
 You should see some output like so. Take note of the public URL (http://a6fe75e8.ngrok.io in this example).
@@ -73,19 +71,23 @@ Session Expires               7 hours, 59 minutes
 Version                       2.3.35
 Region                        United States (us)
 Web Interface                 http://127.0.0.1:4040
-Forwarding                    http://a6fe75e8.ngrok.io -> http://localhost:8000
-Forwarding                    https://a6fe75e8.ngrok.io -> http://localhost:8000
+Forwarding                    http://a6fe75e8.ngrok.io -> http://localhost:3000
+Forwarding                    https://a6fe75e8.ngrok.io -> http://localhost:3000
 
 Connections                   ttl     opn     rt1     rt5     p50     p90
                               0       0       0.00    0.00    0.00    0.00
 ```
 
-Replace the `url` variable with your ngrok URL (here)[https://github.com/IBM/blockchain-maximo/blob/master/maximo_automation_scripts/work_order_script.py#L57]
+Replace the `url` variable with your ngrok URL [here](https://github.com/IBM/blockchain-maximo/blob/master/maximo_automation_scripts/work_order_script.py#L57)
 
 ## 2. Create Automation Script in Maximo
 
-Login to Maximo Dashboard
+Login to Maximo Dashboard. If using the SaaS trial, click the "Go to Start Center" button
 
+<img src="https://i.imgur.com/18AnxBk.png">
+
+
+We should then see the main view like so
 <img src="https://i.imgur.com/PdqHYup.png">
 
 In the "Find Navigation Item" input box, search for the "Automation Scripts" option.
@@ -131,6 +133,12 @@ Click "Save Work Order". We will return to this section once the blockchain ledg
 
 ## 4. Deploy Blockchain Ledger
 
+Clone repository using the git cli
+
+```
+git clone https://github.com/IBM/blockchain-maximo
+```
+
 Add the following entries to your `/etc/hosts` file.
 
 ```
@@ -161,13 +169,6 @@ b85f8b60ea6a        hyperledger/fabric-ca                                       
 
 
 ## 5. Deploy Web Application
-
-Clone repository using the git cli
-
-```
-git clone https://github.com/IBM/blockchain-maximo
-```
-
 
 ### Install Node.js packages
 
